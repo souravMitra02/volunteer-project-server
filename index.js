@@ -73,22 +73,21 @@ async function run() {
       const insertResult = await volunteerRequests.insertOne(requestData);
 
       const updateResult = await volunteerCollection.updateOne(
-        { _id: new ObjectId(requestData.postId) },
+        { _id: new ObjectId(requestData.postId)},
         { $inc: { volunteersNeeded: -1 } }
       );
 
       res.send({ insertResult, updateResult });
     });
 
-    // Get volunteer requests by volunteer email
+    
     app.get("/my-volunteer-requests", async (req, res) => {
       const email = req.query.email;
       const result = await volunteerRequests.find({ volunteerEmail: email }).toArray();
       res.send(result);
     });
 
-    // Cancel a volunteer request
-    app.delete("/cancel-request/:id", async (req, res) => {
+     app.delete("/cancel-request/:id", async (req, res) => {
       const id = req.params.id;
       const request = await volunteerRequests.findOne({ _id: new ObjectId(id) });
 
@@ -102,15 +101,22 @@ async function run() {
       res.send({ deleteResult, updatePost });
     });
 
-      
+     app.put("/volunteer-posts/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+    const result = await volunteerCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+
+    res.send(result);
+  
+}); 
       app.delete("/volunteer-posts/:id", async (req, res) => {
   const id = req.params.id;
-  try {
+  
     const result = await volunteerCollection.deleteOne({ _id: new ObjectId(id) });
     res.send(result);
-  } catch (err) {
-    res.send({ success: false, message: "Something went wrong" });
-  }
 });
 
     await client.db("admin").command({ ping: 1 });
