@@ -22,7 +22,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const db = client.db("volunteerDB");
     const volunteerCollection = db.collection("volunteerPosts");
@@ -112,8 +112,8 @@ async function run() {
       res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(" MongoDB Connected!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(" MongoDB Connected!");
   } finally {
     // Do not close connection
   }
