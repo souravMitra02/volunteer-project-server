@@ -1,17 +1,17 @@
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config();
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+
 const app = express();
 const port = process.env.PORT || 3000;
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-require("dotenv").config();
 
 // middleware
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection string (ensure your .env has DB_USER and DB_PASS)
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ssk8yog.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ssk8yog.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -28,7 +28,10 @@ async function run() {
     const volunteerCollection = db.collection("volunteerPosts");
     const volunteerRequests = db.collection("volunteerRequests");
 
-   
+    app.get("/", (req, res) => {
+      res.send("Volunteer Management Server is running!");
+    });
+
     app.get("/volunteer-now", async (req, res) => {
       const posts = await volunteerCollection
         .find()
@@ -38,7 +41,6 @@ async function run() {
       res.send(posts);
     });
 
-    
     app.get("/volunteer-posts", async (req, res) => {
       const search = req.query.search || "";
       const query = { postTitle: { $regex: search, $options: "i" } };
@@ -46,42 +48,37 @@ async function run() {
       res.send(posts);
     });
 
-   
     app.post("/volunteer-posts", async (req, res) => {
       const newPost = req.body;
       const result = await volunteerCollection.insertOne(newPost);
       res.send(result);
     });
 
-    
     app.get("/volunteer-posts/:id", async (req, res) => {
       const id = req.params.id;
       const result = await volunteerCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
     });
 
-   
+
     app.get("/my-posts", async (req, res) => {
       const email = req.query.email;
       const posts = await volunteerCollection.find({ organizerEmail: email }).toArray();
       res.send(posts);
     });
 
-   
     app.get("/volunteer-requests", async (req, res) => {
       const email = req.query.email;
       const result = await volunteerRequests.find({ volunteerEmail: email }).toArray();
       res.send(result);
     });
 
-    
     app.post("/volunteer-request", async (req, res) => {
       const newRequest = req.body;
       const insertResult = await volunteerRequests.insertOne(newRequest);
       res.send({ insertResult });
     });
 
-   
     app.delete("/cancel-request/:id", async (req, res) => {
       const id = req.params.id;
       const request = await volunteerRequests.findOne({ _id: new ObjectId(id) });
@@ -99,7 +96,6 @@ async function run() {
       }
     });
 
-    
     app.put("/volunteer-posts/:id", async (req, res) => {
       const id = req.params.id;
       const updatedData = req.body;
@@ -110,28 +106,21 @@ async function run() {
       res.send(result);
     });
 
-    
     app.delete("/volunteer-posts/:id", async (req, res) => {
       const id = req.params.id;
       const result = await volunteerCollection.deleteOne({ _id: new ObjectId(id) });
       res.send(result);
     });
 
-    
     await client.db("admin").command({ ping: 1 });
     console.log(" MongoDB Connected!");
   } finally {
-    // Do not close connection here during development
+    // Do not close connection
   }
 }
 
 run().catch(console.dir);
 
-
-app.get("/", (req, res) => {
-  res.send("Volunteer Management Server is running!");
-});
-
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`🚀 Server is running on port ${port}`);
 });
